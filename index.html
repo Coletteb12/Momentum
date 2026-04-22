@@ -1,1 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BoilerCOL — Consumer Price Index</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
 
+  :root {
+    --gold: #CFB991;
+    --black: #1a1a1a;
+    --dark: #141414;
+    --card: #1f1f1f;
+    --border: #2e2e2e;
+    --text: #e8e2d9;
+    --muted: #7a7060;
+    --accent: #e8a020;
+    --green: #5fa87a;
+    --red: #d46060;
+    --purdue-bg: #0f0f0f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--purdue-bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #1a1200 0%, #0f0f0f 60%);
+    border-bottom: 1px solid var(--gold);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  /* Logo placeholder */
+  .logo-img-wrap {
+    width: 110px;
+    height: 110px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .logo-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .logo-img-placeholder {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 0.05em;
+    padding: 6px;
+    line-height: 1.4;
+  }
+
+  .logo-block { flex: 1; min-width: 220px; }
+  .logo-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .logo-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 3.5vw, 42px);
+    color: #fff;
+    line-height: 1;
+  }
+  .logo-title span { color: var(--gold); }
+  .logo-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 400;
+  }
+
+  /* MAIN CONTENT */
+  main {
+    flex: 1;
+    padding: 40px 40px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  /* SLOGAN */
+  .slogan-wrap {
+    text-align: center;
+    max-width: 600px;
+  }
+  .slogan-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .slogan-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(18px, 2.5vw, 26px);
+    color: var(--text);
+    line-height: 1.35;
+    font-style: italic;
+  }
+  .slogan-text span { color: var(--gold); }
+
+  /* CPI CARD */
+  .cpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    max-width: 520px;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  .cpi-card:hover { border-color: #3e3e3e; }
+  .cpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  /* subtle radial glow behind the number */
+  .cpi-card::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(ellipse at center, rgba(207,185,145,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cpi-label {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .cpi-number {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(72px, 12vw, 110px);
+    color: var(--gold);
+    line-height: 1;
+    letter-spacing: -2px;
+    position: relative;
+    z-index: 1;
+  }
+  .cpi-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-top: 4px;
+  }
+  .cpi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+    letter-spacing: 0.08em;
+  }
+  .cpi-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+
+  /* DESCRIPTION CARD */
+  .desc-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px 32px;
+    max-width: 720px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .desc-card:hover { border-color: #3e3e3e; }
+  .desc-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .desc-card:hover::before { opacity: 1; }
+
+  .desc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+  .desc-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    color: #fff;
+  }
+  .desc-badge {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .desc-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .desc-body p {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.75;
+    font-weight: 400;
+  }
+  .desc-body p strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* DIVIDER */
+  .divider {
+    width: 100%;
+    max-width: 720px;
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 18px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .footer-left {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+  .footer-right {
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-img-wrap">
+    <!-- Replace src with your logo path, e.g. src="logo.png" -->
+    <div class="logo-img-placeholder">LOGO<br>HERE</div>
+  </div>
+  <div class="logo-block">
+    <div class="logo-eyebrow">West Lafayette Cost of Living</div>
+    <div class="logo-title">Boiler<span>COL</span></div>
+    <div class="logo-sub">Consumer Price Index Report</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- SLOGAN -->
+  <div class="slogan-wrap">
+    <div class="slogan-eyebrow">Our Mission</div>
+    <p class="slogan-text">
+      Empowering the <span>Purdue community</span> with transparent,<br>
+      data-driven insight into the true cost of living.
+    </p>
+  </div>
+
+  <!-- CPI STAT -->
+  <div class="cpi-card">
+    <div class="cpi-label">Consumer Price Index</div>
+    <div class="cpi-number">4.94%</div>
+    <div class="cpi-subtitle">Year-Over-Year Inflation Rate</div>
+    <div class="cpi-badge">
+      <span class="dot"></span>
+      West Lafayette, IN &nbsp;·&nbsp; Latest Period
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- DESCRIPTION BOX -->
+  <div class="desc-card">
+    <div class="desc-header">
+      <div class="desc-title">About This Project</div>
+      <div class="desc-badge">Project Overview</div>
+    </div>
+    <div class="desc-body">
+      <p>
+        <strong>BoilerCOL</strong> is a student-driven research initiative dedicated to tracking and analyzing the cost of living in the Greater Lafayette area. By aggregating publicly available rental listings, utility estimates, and local pricing data, we build a comprehensive picture of what it actually costs to live near Purdue University.
+      </p>
+      <p>
+        Our Consumer Price Index methodology draws on a standardized basket of goods and services — including housing, transportation, food, and utilities — to produce a single, comparable inflation figure for West Lafayette. The <strong>4.94% year-over-year rate</strong> reflects changes in that basket relative to the prior measurement period.
+      </p>
+      <p>
+        This dashboard is intended as a resource for students, families, and university administrators seeking to understand local affordability trends. All data is collected and processed independently; figures should be interpreted alongside national benchmarks and official BLS statistics for full context.
+      </p>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">BoilerCOL &nbsp;·&nbsp; West Lafayette Cost of Living Initiative</div>
+  <div class="footer-right">Data reflects most recent available period</div>
+</footer>
+
+</body>
+</html>
