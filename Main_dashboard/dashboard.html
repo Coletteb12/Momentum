@@ -289,6 +289,44 @@
     font-size: 10px;
   }
 
+
+  /* CURRENCY SELECTOR */
+  #currency-bar {
+    background: #0d0d0d;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #currency-bar .cur-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+  .cur-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.04em;
+  }
+  .cur-btn:hover { border-color: var(--gold); color: var(--text); }
+  .cur-btn.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 600; }
+  #rate-note {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--muted);
+    font-style: italic;
+  }
   footer {
     padding: 24px 40px;
     text-align: center;
@@ -327,6 +365,17 @@
   <div id="response-count"><span id="filtered-n">389</span> responses shown</div>
 </div>
 
+
+<div id="currency-bar">
+  <span class="cur-label">Display currency</span>
+  <button class="cur-btn active" data-cur="USD">🇺🇸 USD</button>
+  <button class="cur-btn" data-cur="INR">🇮🇳 INR</button>
+  <button class="cur-btn" data-cur="CNY">🇨🇳 CNY</button>
+  <button class="cur-btn" data-cur="KRW">🇰🇷 KRW</button>
+  <button class="cur-btn" data-cur="BRL">🇧🇷 BRL</button>
+  <button class="cur-btn" data-cur="EUR">🇪🇺 EUR</button>
+  <span id="rate-note">Rates fetched live · approximate conversions</span>
+</div>
 <main id="charts-grid"></main>
 
 <footer>BoilerCOL Survey Dashboard &nbsp;·&nbsp; n = 389 responses &nbsp;·&nbsp; Built for Purdue student cost-of-living research</footer>
@@ -574,6 +623,127 @@ function refresh() {
 buildFilterBar();
 buildGrid();
 refresh();
+
+// ─── CURRENCY CONVERSION ────────────────────────────────────────────────────
+const CURRENCIES = {
+  USD: { symbol: '$', rate: 1, name: 'US Dollar', decimals: 0 },
+  INR: { symbol: '₹', rate: 85.5,  name: 'Indian Rupee',    decimals: 0 },
+  CNY: { symbol: '¥', rate: 7.28,  name: 'Chinese Yuan',    decimals: 1 },
+  KRW: { symbol: '₩', rate: 1430,  name: 'South Korean Won',decimals: 0 },
+  BRL: { symbol: 'R$',rate: 5.85,  name: 'Brazilian Real',  decimals: 2 },
+  EUR: { symbol: '€', rate: 0.875, name: 'Euro',            decimals: 2 },
+};
+let activeCurrency = 'USD';
+
+// Try to fetch live rates from frankfurter.app (free, no key needed)
+async function fetchLiveRates() {
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR,CNY,KRW,BRL,EUR');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && data.rates) {
+      Object.entries(data.rates).forEach(([cur, rate]) => {
+        if (CURRENCIES[cur]) CURRENCIES[cur].rate = rate;
+      });
+      document.getElementById('rate-note').textContent =
+        'Live rates as of ' + (data.date || 'today') + ' · Frankfurter / ECB';
+    }
+  } catch(e) {
+    // silently fall back to hardcoded rates
+  }
+}
+fetchLiveRates();
+
+// Parse a USD dollar-range string like "$600-$799", "$1,200 or more", "$0", "Under $400"
+// Returns [midpointUSD, formattedString]
+function convertDollarLabel(label, toCur) {
+  if (toCur === 'USD') return label;
+  const cur = CURRENCIES[toCur];
+  if (!cur) return label;
+
+  // Extract numeric bounds
+  const clean = label.replace(/,/g, '');
+  const nums = clean.match(/\d+(\.\d+)?/g);
+  if (!nums || nums.length === 0) return label;
+
+  const fmt = (n) => {
+    const v = n * cur.rate;
+    if (toCur === 'KRW') return cur.symbol + Math.round(v).toLocaleString();
+    if (toCur === 'INR') return cur.symbol + Math.round(v).toLocaleString();
+    return cur.symbol + v.toFixed(cur.decimals);
+  };
+
+  // patterns
+  if (/^\$0$/.test(label)) return cur.symbol + '0';
+  if (/^\$0-\$/.test(label) || label.startsWith('$0-')) {
+    const hi = parseFloat(nums[1] || nums[0]);
+    return cur.symbol + '0–' + fmt(hi).replace(cur.symbol, '');
+  }
+  if (/under/i.test(label)) {
+    const n = parseFloat(nums[0]);
+    return 'Under ' + fmt(n);
+  }
+  if (/or more/i.test(label)) {
+    const n = parseFloat(nums[0]);
+    return fmt(n) + '+';
+  }
+  if (nums.length >= 2) {
+    const lo = parseFloat(nums[0]), hi = parseFloat(nums[1]);
+    return fmt(lo) + '–' + fmt(hi).replace(cur.symbol, '');
+  }
+  if (nums.length === 1) {
+    return fmt(parseFloat(nums[0]));
+  }
+  return label;
+}
+
+// Patch the bar label rendering to convert currency values
+const MONEY_QUESTIONS = new Set([
+  "If you live off campus, approximately how much do you personally pay per month for rent (your share only)?",
+  "If you live on campus (specifically institutionally-billed housing), approximately how much do you pay per semester for room and board?",
+  "Approximately how much do you spend per month on grocery food items?",
+  "Approximately how much do you spend per month on dining halls or restaurants (outside your meal plan)?",
+  "Approximately how much do you spend per month on transportation?",
+  "If off-campus, approximately how much do you personally pay per month for internet or shared connectivity?",
+  "Approximately how much do you spend per month on personal essentials (laundry, toiletries, hygeine items)?",
+  "Approximately how much do you spend per semester on textbooks, supplies, and academic software?",
+]);
+
+// Override renderBarChart to apply currency conversion on labels
+const _origRenderBarChart = renderBarChart;
+window.renderBarChart = function(container, question, data) {
+  const counts = countValues(data, question);
+  const labels = orderedLabels(question, counts);
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  if (total === 0) { container.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:20px">No data for current filters</div>'; return; }
+
+  const isMoney = MONEY_QUESTIONS.has(question);
+  const maxVal = Math.max(...labels.map(l => counts[l] || 0));
+
+  container.innerHTML = labels.map(l => {
+    const n = counts[l] || 0;
+    const pct = total ? (n / total * 100).toFixed(1) : 0;
+    const w = maxVal ? (n / maxVal * 100) : 0;
+    const displayLabel = (isMoney && activeCurrency !== 'USD') ? convertDollarLabel(l, activeCurrency) : l;
+    return `<div class="bar-row">
+      <div class="bar-label" title="${displayLabel}">${displayLabel}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${w}%"></div>
+        <div class="bar-val">${pct}%</div>
+      </div>
+      <div class="bar-count">${n}</div>
+    </div>`;
+  }).join('');
+};
+
+// Currency button interactions
+document.querySelectorAll('.cur-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cur-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCurrency = btn.dataset.cur;
+    refresh();
+  });
+});
+
 </script>
-</body>
-</html>
