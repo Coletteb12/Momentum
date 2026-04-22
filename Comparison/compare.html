@@ -358,6 +358,20 @@
     <div class="logo-title">Boiler<span>COL</span></div>
     <div class="logo-sub">Rent Data Dashboard — Area & Apartment Analysis</div>
   </div>
+  <div class="header-stats">
+    <div class="header-stat">
+      <div class="big" id="stat-listings">—</div>
+      <div class="label">Listings Tracked</div>
+    </div>
+    <div class="header-stat">
+      <div class="big" id="stat-complexes">—</div>
+      <div class="label">Unique Complexes</div>
+    </div>
+    <div class="header-stat">
+      <div class="big" id="stat-avg">—</div>
+      <div class="label">WL Avg / Mo</div>
+    </div>
+  </div>
 </header>
 
 <!-- SECTION 1: Comparative Average Rent -->
@@ -390,6 +404,18 @@
       </div>
     </div>
   </div>
+
+  <!-- Chart.js bar -->
+  <div class="chart-card">
+    <div class="card-header">
+      <div class="card-title">Market Comparison — Bar Chart</div>
+      <div class="card-badge">$/Month</div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="compareChart"></canvas>
+    </div>
+  </div>
+</div>
 
 <!-- SECTION 2: Apartments by Name -->
 <div class="section-header" style="margin-top:36px;">
