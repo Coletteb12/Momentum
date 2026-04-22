@@ -1,1 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BoilerGROC — Grocery Price Finder</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
 
+  :root {
+    --gold: #CFB991;
+    --black: #1a1a1a;
+    --dark: #141414;
+    --card: #1f1f1f;
+    --border: #2e2e2e;
+    --text: #e8e2d9;
+    --muted: #7a7060;
+    --accent: #e8a020;
+    --green: #5fa87a;
+    --red: #d46060;
+    --purdue-bg: #0f0f0f;
+    --best: #5fa87a;
+    --worst: #d46060;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--purdue-bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #1a1200 0%, #0f0f0f 60%);
+    border-bottom: 1px solid var(--gold);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .logo-block { flex: 1; min-width: 260px; }
+  .logo-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .logo-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    color: #fff;
+    line-height: 1;
+  }
+  .logo-title span { color: var(--gold); }
+  .logo-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 400;
+  }
+  .header-stats { display: flex; gap: 32px; }
+  .header-stat { text-align: right; }
+  .header-stat .big {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .header-stat .label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  /* FILTER BAR */
+  #filter-bar {
+    background: #161616;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .filter-group label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+  .filter-group select, .filter-group input {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    min-width: 160px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .filter-group input { min-width: 200px; }
+  .filter-group select:focus, .filter-group select:hover,
+  .filter-group input:focus, .filter-group input:hover {
+    border-color: var(--gold);
+  }
+  .filter-group select option { background: #1a1a1a; }
+
+  #clear-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  #clear-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  #item-count {
+    font-size: 12px;
+    color: var(--muted);
+    padding-bottom: 2px;
+    margin-left: auto;
+  }
+  #item-count span { color: var(--gold); font-weight: 600; }
+
+  /* LEGEND */
+  .price-legend {
+    background: #161616;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 40px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .legend-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* MAIN GRID */
+  main {
+    padding: 32px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* CATEGORY HEADER */
+  .category-header {
+    font-family: 'DM Serif Display', serif;
+    font-size: 13px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 20px 0 8px;
+    border-bottom: 1px solid #222;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .category-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, #2e2e2e, transparent);
+  }
+
+  /* ITEM CARD */
+  .item-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  .item-card:hover { border-color: #3e3e3e; }
+  .item-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .item-card:hover::before { opacity: 1; }
+
+  .item-name {
+    font-size: 14px;
+    color: #fff;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+  .item-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .stores-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .store-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #2a2a2a;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px 5px 10px;
+    font-size: 12px;
+    transition: all 0.15s;
+    position: relative;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  .store-pill:hover {
+    border-color: var(--gold);
+    transform: translateY(-1px);
+  }
+  .store-pill.best {
+    border-color: rgba(95, 168, 122, 0.5);
+    background: rgba(95, 168, 122, 0.08);
+  }
+  .store-pill.worst {
+    border-color: rgba(212, 96, 96, 0.3);
+    background: rgba(212, 96, 96, 0.05);
+  }
+  .store-pill.middle {
+    border-color: rgba(207, 185, 145, 0.2);
+  }
+
+  .store-name {
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .store-price {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    font-weight: 400;
+  }
+  .store-pill.best .store-price { color: var(--green); }
+  .store-pill.worst .store-price { color: var(--red); }
+  .store-pill.middle .store-price { color: var(--text); }
+
+  .best-badge {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    font-weight: 600;
+    padding: 1px 5px;
+    border: 1px solid rgba(95,168,122,0.4);
+    border-radius: 3px;
+  }
+
+  .no-data {
+    font-size: 11px;
+    color: #444;
+    font-style: italic;
+  }
+
+  /* STORE SUMMARY SECTION */
+  .summary-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .summary-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: #fff;
+    margin-bottom: 16px;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    transition: border-color 0.2s;
+  }
+  .summary-card:hover { border-color: #3e3e3e; }
+  .summary-store {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 3px 0;
+    border-bottom: 1px solid #222;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .val { color: var(--text); font-weight: 500; }
+  .summary-row .val.good { color: var(--green); }
+  .summary-row .val.bad { color: var(--red); }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+
+  @media (max-width: 700px) {
+    header, #filter-bar, main, .price-legend { padding-left: 16px; padding-right: 16px; }
+    .item-card { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <div class="logo-eyebrow">West Lafayette · Grocery Guide</div>
+    <div class="logo-title">Boiler<span>GROC</span></div>
+    <div class="logo-sub">Best prices across local grocery stores</div>
+  </div>
+
+</header>
+
+<div id="filter-bar">
+  <div class="filter-group">
+    <label>Search Item</label>
+    <input type="text" id="search-input" placeholder="e.g. eggs, pasta, milk…">
+  </div>
+  <div class="filter-group">
+    <label>Category</label>
+    <select id="category-filter">
+      <option value="">All Categories</option>
+      <option value="Protein">Protein</option>
+      <option value="Grains & Carbohydrates">Grains & Carbohydrates</option>
+      <option value="Vegetables">Vegetables</option>
+      <option value="Fruit">Fruit</option>
+      <option value="Dairy">Dairy</option>
+      <option value="Convenience & Snacks">Convenience & Snacks</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Store</label>
+    <select id="store-filter">
+      <option value="">All Stores</option>
+      <option value="Aldi">Aldi</option>
+      <option value="Meijer">Meijer</option>
+      <option value="Better World Market">Better World Market</option>
+      <option value="Target">Target</option>
+      <option value="Payless">Payless</option>
+      <option value="Walmart">Walmart</option>
+      <option value="Fresh Thyme Market">Fresh Thyme Market</option>
+    </select>
+  </div>
+  <button id="clear-btn">Reset</button>
+  <div id="item-count">Showing <span id="visible-count">25</span> items</div>
+</div>
+
+<div class="price-legend">
+  <span class="legend-label">Price indicators:</span>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Best price</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div> Mid-range</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Most expensive</div>
+</div>
+
+<main id="main-content"></main>
+
+<script>
+const STORES = ['Aldi','Meijer','Better World Market','Target','Payless','Walmart','Fresh Thyme Market'];
+
+const DATA = [
+  { category:'Protein', item:'1 lb chicken breast or thighs', prices:{ Aldi:2.29, Meijer:2.99, 'Better World Market':4.94, Target:2.69, Payless:4.99, Walmart:7.13, 'Fresh Thyme Market':1.99 } },
+  { category:'Protein', item:'1 dozen eggs', prices:{ Aldi:4.25, Meijer:1.99, 'Better World Market':4.94, Target:2.99, Payless:3.49, Walmart:2.34, 'Fresh Thyme Market':3.49 } },
+  { category:'Protein', item:'1 can black beans (15 oz)', prices:{ Aldi:1.05, Meijer:0.99, Target:0.99, Payless:1.59, Walmart:1.37, 'Fresh Thyme Market':1.79 } },
+  { category:'Protein', item:'1 jar peanut butter (16 oz)', prices:{ Aldi:4.85, Meijer:3.99, Target:1.99, Payless:2.19, Walmart:1.98, 'Fresh Thyme Market':4.59 } },
+  { category:'Protein', item:'16 oz yogurt', prices:{ Aldi:2.29, Meijer:1.50, Target:1.495, Payless:3.99, Walmart:4.12, 'Fresh Thyme Market':6.49 } },
+  { category:'Grains & Carbohydrates', item:'1 loaf sandwich bread', prices:{ Aldi:2.55, Meijer:2.19, Target:1.49, Payless:2.59, Walmart:1.48, 'Fresh Thyme Market':7.99 } },
+  { category:'Grains & Carbohydrates', item:'1 lb rice', prices:{ Aldi:1.41, Meijer:0.99, 'Better World Market':1.73, Target:1.945, Payless:1.59, Walmart:0.98, 'Fresh Thyme Market':2.99 } },
+  { category:'Grains & Carbohydrates', item:'1 lb pasta', prices:{ Aldi:1.09, Meijer:1.99, Target:0.99, Payless:1.59, Walmart:1.84, 'Fresh Thyme Market':2.49 } },
+  { category:'Grains & Carbohydrates', item:'1 pack tortillas (8–10 count)', prices:{ Aldi:2.15, Meijer:2.99, Target:1.49, Payless:2.29, Walmart:2.78, 'Fresh Thyme Market':4.79 } },
+  { category:'Grains & Carbohydrates', item:'1 box cereal', prices:{ Aldi:3.05, Meijer:3.99, Target:2.99, Payless:2.99, Walmart:2.97, 'Fresh Thyme Market':6.99 } },
+  { category:'Vegetables', item:'1 bag frozen mixed vegetables', prices:{ Aldi:1.09, Meijer:1.29, Target:0.99, Payless:1.25, Walmart:1.16, 'Fresh Thyme Market':3.29 } },
+  { category:'Vegetables', item:'1 head broccoli / bag spinach', prices:{ Aldi:3.85, Meijer:1.99, Target:3.19, Payless:1.71, Walmart:2.08, 'Fresh Thyme Market':1.99 } },
+  { category:'Vegetables', item:'1 yellow onion', prices:{ Aldi:2.19, Meijer:1.49, 'Better World Market':2.50, Target:0.89, Payless:0.50, Walmart:0.70, 'Fresh Thyme Market':0.97 } },
+  { category:'Vegetables', item:'1 lb carrots', prices:{ Aldi:1.04, Meijer:1.09, Target:1.29, Payless:1.29, Walmart:1.74, 'Fresh Thyme Market':1.59 } },
+  { category:'Vegetables', item:'Baby bok choi', prices:{ 'Better World Market':2.86 } },
+  { category:'Fruit', item:'4 bananas', prices:{ Aldi:1.92, Meijer:0.96, 'Better World Market':1.49, Target:1.16, Payless:1.03, Walmart:0.80, 'Fresh Thyme Market':1.60 } },
+  { category:'Fruit', item:'3 apples', prices:{ Aldi:1.09, Meijer:2.13, Target:1.66, Payless:3.75, Walmart:4.35, 'Fresh Thyme Market':2.72 } },
+  { category:'Fruit', item:'Kiwi 1 lb', prices:{ 'Better World Market':2.99 } },
+  { category:'Dairy', item:'½ gallon milk', prices:{ Aldi:1.15, Meijer:1.20, Target:1.85, Payless:1.59, Walmart:1.32, 'Fresh Thyme Market':2.79 } },
+  { category:'Dairy', item:'8 oz shredded cheese', prices:{ Aldi:2.99, Meijer:2.49, Target:4.19, Payless:2.49, Walmart:1.97, 'Fresh Thyme Market':3.49 } },
+  { category:'Convenience & Snacks', item:'1 frozen pizza', prices:{ Aldi:3.09, Meijer:1.19, Target:3.49, Payless:5.99, Walmart:4.82, 'Fresh Thyme Market':3.74 } },
+  { category:'Convenience & Snacks', item:'1 bag chips', prices:{ Aldi:1.99, Meijer:0.99, 'Better World Market':3.95, Target:1.89, Payless:5.49, Walmart:4.48, 'Fresh Thyme Market':5.49 } },
+  { category:'Convenience & Snacks', item:'1 box granola/snack bars', prices:{ Aldi:3.15, Meijer:2.39, Target:2.99, Payless:2.99, Walmart:2.97, 'Fresh Thyme Market':6.99 } },
+  { category:'Convenience & Snacks', item:'1 two-liter soda', prices:{ Aldi:3.29, Meijer:0.99, 'Better World Market':1.67, Target:2.99, Payless:3.49, Walmart:2.97 } },
+  { category:'Convenience & Snacks', item:'Chocolate bar', prices:{ 'Better World Market':4.45 } },
+];
+
+const STORE_SUMMARY = [
+  { store:'Aldi', items:22, total:51.82, avg:2.36, vs:'+64.4%' },
+  { store:'Meijer', items:22, total:41.81, avg:1.90, vs:'+32.6%' },
+  { store:'Better World Market', items:10, total:31.52, avg:3.15, vs:'Cheapest' },
+  { store:'Target', items:22, total:45.64, avg:2.07, vs:'+44.8%' },
+  { store:'Payless', items:22, total:58.87, avg:2.68, vs:'+86.8%' },
+  { store:'Walmart', items:22, total:56.35, avg:2.56, vs:'+78.8%' },
+  { store:'Fresh Thyme Market', items:21, total:78.26, avg:3.73, vs:'+148.3%' },
+];
+
+const CATEGORIES = [...new Set(DATA.map(d => d.category))];
+
+function fmt(p) { return '$' + p.toFixed(2); }
+
+function renderItems(filtered) {
+  const container = document.getElementById('main-content');
+  const storeFilter = document.getElementById('store-filter').value;
+  
+  let html = '';
+  let visibleCount = 0;
+
+  // Group by category, maintaining order
+  const catOrder = ['Protein','Grains & Carbohydrates','Vegetables','Fruit','Dairy','Convenience & Snacks'];
+  
+  catOrder.forEach(cat => {
+    const items = filtered.filter(d => d.category === cat);
+    if (!items.length) return;
+
+    html += `<div class="category-header">${cat}</div>`;
+
+    items.forEach(d => {
+      visibleCount++;
+      const prices = d.prices;
+      const storeKeys = storeFilter ? [storeFilter] : STORES;
+      const available = storeKeys.filter(s => prices[s] != null);
+      
+      // Determine min/max across ALL stores (not just filtered)
+      const allPrices = Object.values(prices);
+      const minPrice = Math.min(...allPrices);
+      const maxPrice = Math.max(...allPrices);
+
+      // Pills for all stores (or just filtered store)
+      let pillsHtml = '';
+      
+      if (storeFilter) {
+        // Show just the one store
+        const p = prices[storeFilter];
+        if (p != null) {
+          pillsHtml = `<div class="store-pill middle">
+            <span class="store-name">${storeFilter}</span>
+            <span class="store-price">${fmt(p)}</span>
+          </div>`;
+        } else {
+          pillsHtml = `<span class="no-data">Not available at ${storeFilter}</span>`;
+        }
+      } else {
+        // Sort stores by price ascending, N/A at end
+        const sorted = [...STORES].sort((a, b) => {
+          const pa = prices[a]; const pb = prices[b];
+          if (pa == null && pb == null) return 0;
+          if (pa == null) return 1;
+          if (pb == null) return -1;
+          return pa - pb;
+        });
+
+        sorted.forEach((store, idx) => {
+          const p = prices[store];
+          if (p == null) return; // skip unavailable
+          
+          let cls = 'middle';
+          if (p === minPrice && allPrices.filter(x => x === minPrice).length < allPrices.length) cls = 'best';
+          else if (p === maxPrice && allPrices.length > 1) cls = 'worst';
+
+          const badge = cls === 'best' ? '<span class="best-badge">Best</span>' : '';
+          pillsHtml += `<div class="store-pill ${cls}">
+            <span class="store-name">${store}</span>
+            <span class="store-price">${fmt(p)}</span>
+            ${badge}
+          </div>`;
+        });
+      }
+
+      const availCount = Object.keys(prices).length;
+      html += `<div class="item-card">
+        <div>
+          <div class="item-name">${d.item}</div>
+          <div class="item-meta">${availCount} store${availCount !== 1 ? 's' : ''} tracked</div>
+        </div>
+        <div class="stores-row">${pillsHtml}</div>
+      </div>`;
+    });
+  });
+
+  // Store summary
+  html += `<div class="summary-section">
+    <div class="summary-title">Store Summary</div>
+    <div class="summary-grid">`;
+  
+  STORE_SUMMARY.forEach(s => {
+    const isCheapest = s.vs === 'Cheapest';
+    html += `<div class="summary-card">
+      <div class="summary-store">${s.store}</div>
+      <div class="summary-row"><span>Items Tracked</span><span class="val">${s.items}</span></div>
+      <div class="summary-row"><span>Total (Common)</span><span class="val">$${s.total.toFixed(2)}</span></div>
+      <div class="summary-row"><span>Avg / Item</span><span class="val">$${s.avg.toFixed(2)}</span></div>
+      <div class="summary-row"><span>vs. Cheapest</span><span class="val ${isCheapest ? 'good' : 'bad'}">${s.vs}</span></div>
+    </div>`;
+  });
+
+  html += `</div></div>`;
+
+  container.innerHTML = html;
+  document.getElementById('visible-count').textContent = visibleCount;
+}
+
+function applyFilters() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const cat = document.getElementById('category-filter').value;
+  const store = document.getElementById('store-filter').value;
+
+  let filtered = DATA;
+  if (search) filtered = filtered.filter(d => d.item.toLowerCase().includes(search));
+  if (cat) filtered = filtered.filter(d => d.category === cat);
+  if (store) filtered = filtered.filter(d => d.prices[store] != null);
+
+  renderItems(filtered);
+}
+
+document.getElementById('search-input').addEventListener('input', applyFilters);
+document.getElementById('category-filter').addEventListener('change', applyFilters);
+document.getElementById('store-filter').addEventListener('change', applyFilters);
+document.getElementById('clear-btn').addEventListener('click', () => {
+  document.getElementById('search-input').value = '';
+  document.getElementById('category-filter').value = '';
+  document.getElementById('store-filter').value = '';
+  applyFilters();
+});
+
+// Initial render
+renderItems(DATA);
+</script>
+</body>
+</html>
