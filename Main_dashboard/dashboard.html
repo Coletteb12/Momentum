@@ -21,6 +21,7 @@
     --red: #d46060;
     --purdue-bg: #0f0f0f;
   }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
@@ -288,6 +289,21 @@
     font-size: 10px;
   }
 
+  footer {
+    padding: 24px 40px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.05em;
+  }
+  footer a { color: var(--gold); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    header, #filter-bar, main { padding: 16px; }
+    main { grid-template-columns: 1fr; }
+    .bar-label { width: 120px; min-width: 120px; }
+  }
 
   /* CURRENCY SELECTOR */
   #currency-bar {
@@ -317,6 +333,13 @@
     cursor: pointer;
     transition: all 0.18s;
     letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cur-btn img {
+    border-radius: 2px;
+    display: block;
   }
   .cur-btn:hover { border-color: var(--gold); color: var(--text); }
   .cur-btn.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 600; }
@@ -326,21 +349,7 @@
     color: var(--muted);
     font-style: italic;
   }
-  footer {
-    padding: 24px 40px;
-    text-align: center;
-    font-size: 11px;
-    color: var(--muted);
-    border-top: 1px solid var(--border);
-    letter-spacing: 0.05em;
-  }
-  footer a { color: var(--gold); text-decoration: none; }
 
-  @media (max-width: 600px) {
-    header, #filter-bar, main { padding: 16px; }
-    main { grid-template-columns: 1fr; }
-    .bar-label { width: 120px; min-width: 120px; }
-  }
 </style>
 </head>
 <body>
@@ -367,12 +376,12 @@
 
 <div id="currency-bar">
   <span class="cur-label">Display currency</span>
-  <button class="cur-btn active" data-cur="USD">🇺🇸 USD</button>
-  <button class="cur-btn" data-cur="INR">🇮🇳 INR</button>
-  <button class="cur-btn" data-cur="CNY">🇨🇳 CNY</button>
-  <button class="cur-btn" data-cur="KRW">🇰🇷 KRW</button>
-  <button class="cur-btn" data-cur="BRL">🇧🇷 BRL</button>
-  <button class="cur-btn" data-cur="EUR">🇪🇺 EUR</button>
+  <button class="cur-btn active" data-cur="USD"><img src="https://flagcdn.com/20x15/us.png" width="20" height="15" alt="US"> USD</button>
+  <button class="cur-btn" data-cur="INR"><img src="https://flagcdn.com/20x15/in.png" width="20" height="15" alt="IN"> INR</button>
+  <button class="cur-btn" data-cur="CNY"><img src="https://flagcdn.com/20x15/cn.png" width="20" height="15" alt="CN"> CNY</button>
+  <button class="cur-btn" data-cur="KRW"><img src="https://flagcdn.com/20x15/kr.png" width="20" height="15" alt="KR"> KRW</button>
+  <button class="cur-btn" data-cur="BRL"><img src="https://flagcdn.com/20x15/br.png" width="20" height="15" alt="BR"> BRL</button>
+  <button class="cur-btn" data-cur="EUR"><img src="https://flagcdn.com/20x15/eu.png" width="20" height="15" alt="EU"> EUR</button>
   <span id="rate-note">Rates fetched live · approximate conversions</span>
 </div>
 <main id="charts-grid"></main>
@@ -620,19 +629,19 @@ function refresh() {
 buildFilterBar();
 buildGrid();
 refresh();
+</script>
 
-// ─── CURRENCY CONVERSION ────────────────────────────────────────────────────
+<script>
 const CURRENCIES = {
-  USD: { symbol: '$', rate: 1, name: 'US Dollar', decimals: 0 },
-  INR: { symbol: '₹', rate: 85.5,  name: 'Indian Rupee',    decimals: 0 },
-  CNY: { symbol: '¥', rate: 7.28,  name: 'Chinese Yuan',    decimals: 1 },
-  KRW: { symbol: '₩', rate: 1430,  name: 'South Korean Won',decimals: 0 },
-  BRL: { symbol: 'R$',rate: 5.85,  name: 'Brazilian Real',  decimals: 2 },
-  EUR: { symbol: '€', rate: 0.875, name: 'Euro',            decimals: 2 },
+  USD: { symbol: '$',  rate: 1,    name: 'US Dollar',         decimals: 0 },
+  INR: { symbol: '₹',  rate: 85.5, name: 'Indian Rupee',      decimals: 0 },
+  CNY: { symbol: '¥',  rate: 7.28, name: 'Chinese Yuan',      decimals: 1 },
+  KRW: { symbol: '₩',  rate: 1430, name: 'South Korean Won',  decimals: 0 },
+  BRL: { symbol: 'R$', rate: 5.85, name: 'Brazilian Real',    decimals: 2 },
+  EUR: { symbol: '€',  rate: 0.875,name: 'Euro',              decimals: 2 },
 };
 let activeCurrency = 'USD';
 
-// Try to fetch live rates from frankfurter.app (free, no key needed)
 async function fetchLiveRates() {
   try {
     const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR,CNY,KRW,BRL,EUR');
@@ -645,56 +654,30 @@ async function fetchLiveRates() {
       document.getElementById('rate-note').textContent =
         'Live rates as of ' + (data.date || 'today') + ' · Frankfurter / ECB';
     }
-  } catch(e) {
-    // silently fall back to hardcoded rates
-  }
+  } catch(e) {}
 }
 fetchLiveRates();
 
-// Parse a USD dollar-range string like "$600-$799", "$1,200 or more", "$0", "Under $400"
-// Returns [midpointUSD, formattedString]
 function convertDollarLabel(label, toCur) {
   if (toCur === 'USD') return label;
   const cur = CURRENCIES[toCur];
   if (!cur) return label;
-
-  // Extract numeric bounds
   const clean = label.replace(/,/g, '');
   const nums = clean.match(/\d+(\.\d+)?/g);
   if (!nums || nums.length === 0) return label;
-
   const fmt = (n) => {
     const v = n * cur.rate;
-    if (toCur === 'KRW') return cur.symbol + Math.round(v).toLocaleString();
-    if (toCur === 'INR') return cur.symbol + Math.round(v).toLocaleString();
+    if (toCur === 'KRW' || toCur === 'INR') return cur.symbol + Math.round(v).toLocaleString();
     return cur.symbol + v.toFixed(cur.decimals);
   };
-
-  // patterns
   if (/^\$0$/.test(label)) return cur.symbol + '0';
-  if (/^\$0-\$/.test(label) || label.startsWith('$0-')) {
-    const hi = parseFloat(nums[1] || nums[0]);
-    return cur.symbol + '0–' + fmt(hi).replace(cur.symbol, '');
-  }
-  if (/under/i.test(label)) {
-    const n = parseFloat(nums[0]);
-    return 'Under ' + fmt(n);
-  }
-  if (/or more/i.test(label)) {
-    const n = parseFloat(nums[0]);
-    return fmt(n) + '+';
-  }
-  if (nums.length >= 2) {
-    const lo = parseFloat(nums[0]), hi = parseFloat(nums[1]);
-    return fmt(lo) + '–' + fmt(hi).replace(cur.symbol, '');
-  }
-  if (nums.length === 1) {
-    return fmt(parseFloat(nums[0]));
-  }
+  if (/under/i.test(label)) return 'Under ' + fmt(parseFloat(nums[0]));
+  if (/or more/i.test(label)) return fmt(parseFloat(nums[0])) + '+';
+  if (nums.length >= 2) return fmt(parseFloat(nums[0])) + '–' + fmt(parseFloat(nums[1])).replace(cur.symbol,'');
+  if (nums.length === 1) return fmt(parseFloat(nums[0]));
   return label;
 }
 
-// Patch the bar label rendering to convert currency values
 const MONEY_QUESTIONS = new Set([
   "If you live off campus, approximately how much do you personally pay per month for rent (your share only)?",
   "If you live on campus (specifically institutionally-billed housing), approximately how much do you pay per semester for room and board?",
@@ -706,17 +689,14 @@ const MONEY_QUESTIONS = new Set([
   "Approximately how much do you spend per semester on textbooks, supplies, and academic software?",
 ]);
 
-// Override renderBarChart to apply currency conversion on labels
-const _origRenderBarChart = renderBarChart;
-window.renderBarChart = function(container, question, data) {
+const _origRenderBarChart = window.renderBarChart || renderBarChart;
+function renderBarChartWithCurrency(container, question, data) {
   const counts = countValues(data, question);
   const labels = orderedLabels(question, counts);
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   if (total === 0) { container.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:20px">No data for current filters</div>'; return; }
-
   const isMoney = MONEY_QUESTIONS.has(question);
   const maxVal = Math.max(...labels.map(l => counts[l] || 0));
-
   container.innerHTML = labels.map(l => {
     const n = counts[l] || 0;
     const pct = total ? (n / total * 100).toFixed(1) : 0;
@@ -731,16 +711,23 @@ window.renderBarChart = function(container, question, data) {
       <div class="bar-count">${n}</div>
     </div>`;
   }).join('');
-};
+}
 
-// Currency button interactions
 document.querySelectorAll('.cur-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.cur-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeCurrency = btn.dataset.cur;
-    refresh();
+    // Re-render all bar charts with currency
+    const data = filteredRows();
+    headers.forEach(q => {
+      if (!LABELS[q] || DONUT_QUESTIONS.has(q)) return;
+      const canvasId = 'c_' + q.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const container = document.getElementById(canvasId);
+      if (container) renderBarChartWithCurrency(container, q, data);
+    });
   });
 });
-
 </script>
+</body>
+</html>
