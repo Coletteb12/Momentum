@@ -358,20 +358,6 @@
     <div class="logo-title">Boiler<span>COL</span></div>
     <div class="logo-sub">Rent Data Dashboard — Area & Apartment Analysis</div>
   </div>
-  <div class="header-stats">
-    <div class="header-stat">
-      <div class="big" id="stat-listings">—</div>
-      <div class="label">Listings Tracked</div>
-    </div>
-    <div class="header-stat">
-      <div class="big" id="stat-complexes">—</div>
-      <div class="label">Unique Complexes</div>
-    </div>
-    <div class="header-stat">
-      <div class="big" id="stat-avg">—</div>
-      <div class="label">WL Avg / Mo</div>
-    </div>
-  </div>
 </header>
 
 <!-- SECTION 1: Comparative Average Rent -->
@@ -405,16 +391,7 @@
     </div>
   </div>
 
-  <!-- Chart.js bar -->
-  <div class="chart-card">
-    <div class="card-header">
-      <div class="card-title">Market Comparison — Bar Chart</div>
-      <div class="card-badge">$/Month</div>
-    </div>
-    <div class="chart-wrap">
-      <canvas id="compareChart"></canvas>
-    </div>
-  </div>
+
 </div>
 
 <!-- SECTION 2: Apartments by Name -->
@@ -744,22 +721,8 @@ function renderAptBars() {
   }).join('');
 }
 
-// ─── HEADER STATS ─────────────────────────────────────────────────────────────
-
-function buildHeaderStats() {
-  const valid = LISTINGS_RAW.filter(d => d.city === 'West Lafayette');
-  const wlAvg = Math.round(valid.reduce((s, d) => s + d.rent, 0) / valid.length);
-  const complexes = new Set(LISTINGS_RAW.map(d => d.name)).size;
-
-  document.getElementById('stat-listings').textContent = LISTINGS_RAW.length;
-  document.getElementById('stat-complexes').textContent = complexes;
-  document.getElementById('stat-avg').textContent = `$${wlAvg.toLocaleString()}`;
-}
-
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-buildHeaderStats();
 buildCompareSection();
-buildCompareChart();
 renderAptBars();
 
 document.getElementById('city-filter').addEventListener('change', renderAptBars);
