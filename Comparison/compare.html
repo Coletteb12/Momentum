@@ -1,1 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BoilerCOL — Rent Data Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
 
+  :root {
+    --gold: #CFB991;
+    --black: #1a1a1a;
+    --dark: #141414;
+    --card: #1f1f1f;
+    --border: #2e2e2e;
+    --text: #e8e2d9;
+    --muted: #7a7060;
+    --accent: #e8a020;
+    --green: #5fa87a;
+    --red: #d46060;
+    --purdue-bg: #0f0f0f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--purdue-bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #1a1200 0%, #0f0f0f 60%);
+    border-bottom: 1px solid var(--gold);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .logo-block { flex: 1; min-width: 260px; }
+  .logo-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .logo-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    color: #fff;
+    line-height: 1;
+  }
+  .logo-title span { color: var(--gold); }
+  .logo-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 400;
+  }
+  .header-stats {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .header-stat { text-align: right; }
+  .header-stat .big {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .header-stat .label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  /* SECTION LABELS */
+  .section-header {
+    padding: 28px 40px 0;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: #fff;
+  }
+  .section-sub {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .section-divider {
+    margin: 0 40px;
+    border: none;
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+  }
+
+  /* GRID */
+  .grid {
+    padding: 24px 40px 40px;
+    display: grid;
+    gap: 20px;
+  }
+  .grid-1 { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 20px 16px;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .chart-card:hover { border-color: #3e3e3e; }
+  .chart-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .chart-card:hover::before { opacity: 1; }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: #fff;
+    line-height: 1.3;
+    flex: 1;
+  }
+  .card-badge {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+
+  /* COMPARATIVE BAR CHART — Section 1 */
+  .compare-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .compare-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .compare-label {
+    width: 150px;
+    min-width: 150px;
+    font-size: 12px;
+    color: #ccc;
+    text-align: right;
+    font-weight: 400;
+  }
+  .compare-track {
+    flex: 1;
+    background: #252525;
+    border-radius: 3px;
+    height: 28px;
+    overflow: hidden;
+    position: relative;
+  }
+  .compare-fill {
+    height: 100%;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+  }
+  .compare-fill.highlight {
+    background: linear-gradient(90deg, #b89030, var(--gold));
+  }
+  .compare-fill.normal {
+    background: linear-gradient(90deg, #3a3020, #5a4a28);
+  }
+  .compare-fill.us {
+    background: linear-gradient(90deg, #2a3a2a, #4a6a4a);
+  }
+  .compare-val {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .compare-delta {
+    width: 90px;
+    min-width: 90px;
+    font-size: 11px;
+    text-align: left;
+  }
+  .delta-up { color: var(--red); }
+  .delta-down { color: var(--green); }
+  .delta-neutral { color: var(--muted); }
+
+  /* CANVAS CHART wrapper */
+  .chart-wrap {
+    position: relative;
+    height: 320px;
+  }
+
+  /* APARTMENT TABLE — Section 2 */
+  .apt-filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .apt-filter-bar label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+  .apt-filter-bar select {
+    background: #252525;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .apt-filter-bar select:hover, .apt-filter-bar select:focus { border-color: var(--gold); }
+  .apt-filter-bar select option { background: #1a1a1a; }
+
+  /* APT BARS — horizontal bar per complex */
+  .apt-bars { display: flex; flex-direction: column; gap: 8px; }
+  .apt-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .apt-name {
+    width: 200px;
+    min-width: 200px;
+    color: #bbb;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+  .apt-track {
+    flex: 1;
+    background: #252525;
+    border-radius: 2px;
+    height: 22px;
+    overflow: hidden;
+    position: relative;
+  }
+  .apt-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--accent));
+    transition: width 0.7s cubic-bezier(.4,0,.2,1);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+  }
+  .apt-fill.walkable {
+    background: linear-gradient(90deg, #3a7a55, var(--green));
+  }
+  .apt-fill-val {
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .apt-count {
+    width: 60px;
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .apt-city-badge {
+    width: 90px;
+    min-width: 90px;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: left;
+  }
+
+  .legend-strip {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-block">
+    <div class="logo-eyebrow">Purdue University · West Lafayette</div>
+    <div class="logo-title">Boiler<span>COL</span></div>
+    <div class="logo-sub">Rent Data Dashboard — Area & Apartment Analysis</div>
+  </div>
+</header>
+
+<!-- SECTION 1: Comparative Average Rent -->
+<div class="section-header">
+  <div class="section-title">Regional Rent Comparison</div>
+  <div class="section-sub">Average monthly rent by market</div>
+</div>
+<hr class="section-divider">
+
+<div class="grid grid-2" style="padding-top:24px; padding-bottom:0;">
+  <!-- Horizontal bar comparison -->
+  <div class="chart-card">
+    <div class="card-header">
+      <div class="card-title">Average Rent by Location</div>
+      <div class="card-badge">5 Markets</div>
+    </div>
+    <div class="compare-bars" id="compare-bars"></div>
+    <div class="legend-strip" style="margin-top:18px;">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--gold);"></div>
+        West Lafayette (local)
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#4a6a4a;"></div>
+        United States avg
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#5a4a28;"></div>
+        Other Indiana markets
+      </div>
+    </div>
+  </div>
+
+<!-- SECTION 2: Apartments by Name -->
+<div class="section-header" style="margin-top:36px;">
+  <div class="section-title">Average Rent by Complex</div>
+  <div class="section-sub">Computed from listings data</div>
+</div>
+<hr class="section-divider">
+
+<div class="grid grid-1">
+  <div class="chart-card">
+    <div class="card-header">
+      <div class="card-title">Per-Complex Average Monthly Rent</div>
+      <div class="card-badge" id="apt-shown-badge">All Complexes</div>
+    </div>
+    <div class="apt-filter-bar">
+      <label>City</label>
+      <select id="city-filter">
+        <option value="">All Cities</option>
+        <option value="West Lafayette">West Lafayette</option>
+        <option value="Lafayette">Lafayette</option>
+      </select>
+      <label style="margin-left:8px;">Walkability</label>
+      <select id="walk-filter">
+        <option value="">All</option>
+        <option value="Walkable">Walkable</option>
+        <option value="Not walkable">Not Walkable</option>
+      </select>
+      <label style="margin-left:8px;">Sort</label>
+      <select id="sort-filter">
+        <option value="asc">Price ↑ Low to High</option>
+        <option value="desc">Price ↓ High to Low</option>
+        <option value="name">Name A–Z</option>
+      </select>
+    </div>
+    <div class="apt-bars" id="apt-bars"></div>
+    <div class="legend-strip" style="margin-top:16px;">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--gold);"></div>
+        Not Walkable / Mixed
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--green);"></div>
+        Walkable
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>BoilerCOL · Rent Data Dashboard · Listings sourced from public apartment directories</footer>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+
+const TRACKER_DATA = [
+  { location: "West Lafayette", avg: 1848 },
+  { location: "Lafayette",      avg: 1178 },
+  { location: "Indianapolis",   avg: 1370 },
+  { location: "Indiana",        avg: 1400 },
+  { location: "United States",  avg: 1900 },
+];
+
+const LISTINGS_RAW = [
+  {name:"The Cottages on Lindberg",city:"West Lafayette",rent:1049,walk:"Not walkable"},
+  {name:"The Cottages on Lindberg",city:"West Lafayette",rent:2158,walk:"Not walkable"},
+  {name:"The Cottages on Lindberg",city:"West Lafayette",rent:907,walk:"Not walkable"},
+  {name:"The Cottages on Lindberg",city:"West Lafayette",rent:814,walk:"Not walkable"},
+  {name:"The Cottages on Lindberg",city:"West Lafayette",rent:599,walk:"Not walkable"},
+  {name:"West Heights Townhomes",city:"West Lafayette",rent:2195,walk:"Not walkable"},
+  {name:"910-914 11th Street",city:"Lafayette",rent:895,walk:"Not walkable"},
+  {name:"635-639 Oregon Street",city:"Lafayette",rent:925,walk:"Not walkable"},
+  {name:"813 Wabash Ave",city:"Lafayette",rent:825,walk:"Not walkable"},
+  {name:"308 11th Street",city:"Lafayette",rent:795,walk:"Not walkable"},
+  {name:"1018 Brown Street",city:"Lafayette",rent:1295,walk:"Not walkable"},
+  {name:"1222 Columbia Street",city:"Lafayette",rent:825,walk:"Not walkable"},
+  {name:"Mayfair Village",city:"West Lafayette",rent:999,walk:"Not walkable"},
+  {name:"Blackbird Farms",city:"West Lafayette",rent:1425,walk:"Not walkable"},
+  {name:"Blackbird Farms",city:"West Lafayette",rent:1451,walk:"Not walkable"},
+  {name:"Blackbird Farms",city:"West Lafayette",rent:1903,walk:"Not walkable"},
+  {name:"Blackbird Farms",city:"West Lafayette",rent:2152,walk:"Not walkable"},
+  {name:"Montage",city:"West Lafayette",rent:1654,walk:"Not walkable"},
+  {name:"Montage",city:"West Lafayette",rent:2264,walk:"Not walkable"},
+  {name:"Montage",city:"West Lafayette",rent:2736,walk:"Not walkable"},
+  {name:"WestRidge Flats",city:"West Lafayette",rent:1395,walk:"Not walkable"},
+  {name:"WestRidge Flats",city:"West Lafayette",rent:1583,walk:"Not walkable"},
+  {name:"WestRidge Flats",city:"West Lafayette",rent:1829,walk:"Not walkable"},
+  {name:"Continuum",city:"West Lafayette",rent:1700,walk:"Walkable"},
+  {name:"Continuum",city:"West Lafayette",rent:1805,walk:"Walkable"},
+  {name:"Continuum",city:"West Lafayette",rent:2410,walk:"Walkable"},
+  {name:"420 South Chauncey Avenue",city:"West Lafayette",rent:1179,walk:"Walkable"},
+  {name:"420 South Chauncey Avenue",city:"West Lafayette",rent:1549,walk:"Walkable"},
+  {name:"Nobb Hill",city:"West Lafayette",rent:834,walk:"Not walkable"},
+  {name:"Weida on Waldron",city:"West Lafayette",rent:1900,walk:"Walkable"},
+  {name:"Weida on Waldron",city:"West Lafayette",rent:1600,walk:"Walkable"},
+  {name:"4UP",city:"West Lafayette",rent:1929,walk:"Walkable"},
+  {name:"4UP",city:"West Lafayette",rent:1949,walk:"Walkable"},
+  {name:"4UP",city:"West Lafayette",rent:1447,walk:"Walkable"},
+  {name:"4UP",city:"West Lafayette",rent:1447,walk:"Walkable"},
+  {name:"Verve",city:"West Lafayette",rent:2581,walk:"Walkable"},
+  {name:"Verve",city:"West Lafayette",rent:1761,walk:"Walkable"},
+  {name:"Verve",city:"West Lafayette",rent:1627,walk:"Walkable"},
+  {name:"Verve",city:"West Lafayette",rent:1473,walk:"Walkable"},
+  {name:"Lark",city:"West Lafayette",rent:559,walk:"Not walkable"},
+  {name:"Lark",city:"West Lafayette",rent:505,walk:"Not walkable"},
+  {name:"Alight",city:"West Lafayette",rent:1449,walk:"Not walkable"},
+  {name:"Alight",city:"West Lafayette",rent:1269,walk:"Not walkable"},
+  {name:"Alight",city:"West Lafayette",rent:819,walk:"Not walkable"},
+  {name:"Alight",city:"West Lafayette",rent:609,walk:"Not walkable"},
+  {name:"Alight",city:"West Lafayette",rent:499,walk:"Not walkable"},
+  {name:"Alight",city:"West Lafayette",rent:519,walk:"Not walkable"},
+  {name:"Ever",city:"West Lafayette",rent:2454,walk:"Walkable"},
+  {name:"Ever",city:"West Lafayette",rent:2619,walk:"Walkable"},
+  {name:"Ever",city:"West Lafayette",rent:1804,walk:"Walkable"},
+  {name:"Ever",city:"West Lafayette",rent:1754,walk:"Walkable"},
+  {name:"Ever",city:"West Lafayette",rent:1558,walk:"Walkable"},
+  {name:"1001 Fannon Drive Townhome",city:"Lafayette",rent:1928,walk:"Not walkable"},
+  {name:"1912 Indian Trail Drive House",city:"West Lafayette",rent:2600,walk:"Not walkable"},
+  {name:"422 South Grant Street Apartments",city:"West Lafayette",rent:2400,walk:"Walkable"},
+  {name:"422 South Grant Street Apartments",city:"West Lafayette",rent:3000,walk:"Walkable"},
+  {name:"1520 Grove Street Lafayette Duplex",city:"Lafayette",rent:1300,walk:"Not walkable"},
+  {name:"111 South 6th Street Duplex",city:"Lafayette",rent:1150,walk:"Not walkable"},
+  {name:"3324 Humboldt St. House",city:"West Lafayette",rent:2500,walk:"Not walkable"},
+  {name:"Chauncey Square Apartments",city:"West Lafayette",rent:1949,walk:"Walkable"},
+  {name:"Chauncey Square Apartments",city:"West Lafayette",rent:1949,walk:"Walkable"},
+  {name:"Chauncey Square Apartments",city:"West Lafayette",rent:1462,walk:"Walkable"},
+  {name:"Chauncey Square Apartments",city:"West Lafayette",rent:1279,walk:"Walkable"},
+  {name:"Chauncey Square Apartments",city:"West Lafayette",rent:1319,walk:"Walkable"},
+  {name:"Chauncey Square Apartments",city:"West Lafayette",rent:1314,walk:"Walkable"},
+  {name:"Chauncey Square Apartments",city:"West Lafayette",rent:1339,walk:"Walkable"},
+  {name:"Odyssey Apartments",city:"West Lafayette",rent:1499,walk:"Not walkable"},
+  {name:"Odyssey Apartments",city:"West Lafayette",rent:1025,walk:"Not walkable"},
+  {name:"Odyssey Apartments",city:"West Lafayette",rent:883,walk:"Not walkable"},
+  {name:"715 Tippecanoe Street",city:"Lafayette",rent:1275,walk:"Not walkable"},
+  {name:"1214 Columbia Street",city:"Lafayette",rent:873,walk:"Not walkable"},
+  {name:"1214 Columbia Street",city:"Lafayette",rent:1023,walk:"Not walkable"},
+  {name:"1214 Columbia Street",city:"Lafayette",rent:1145,walk:"Not walkable"},
+  {name:"1214 Columbia Street",city:"Lafayette",rent:1248,walk:"Not walkable"},
+  {name:"1214 Columbia Street",city:"Lafayette",rent:1395,walk:"Not walkable"},
+  {name:"Hub on Campus",city:"West Lafayette",rent:1776,walk:"Walkable"},
+  {name:"Hub on Campus",city:"West Lafayette",rent:2314,walk:"Walkable"},
+  {name:"Hub on Campus",city:"West Lafayette",rent:1459,walk:"Walkable"},
+  {name:"Hub on Campus",city:"West Lafayette",rent:1683,walk:"Walkable"},
+  {name:"Hub on Campus",city:"West Lafayette",rent:1431,walk:"Walkable"},
+  {name:"Hub on Campus",city:"West Lafayette",rent:1555,walk:"Walkable"},
+  {name:"Hub on Campus",city:"West Lafayette",rent:1357,walk:"Walkable"},
+  {name:"Hub on Campus",city:"West Lafayette",rent:1348,walk:"Walkable"},
+  {name:"Hub on Campus",city:"West Lafayette",rent:1483,walk:"Walkable"},
+  {name:"The Ellsworth",city:"Lafayette",rent:1556,walk:"Not walkable"},
+  {name:"The Ellsworth",city:"Lafayette",rent:2095,walk:"Not walkable"},
+  {name:"800 N 15th Street",city:"Lafayette",rent:930,walk:"Not walkable"},
+  {name:"Anvil 38",city:"Lafayette",rent:1120,walk:"Not walkable"},
+  {name:"Anvil 39",city:"Lafayette",rent:1201,walk:"Not walkable"},
+  {name:"Anvil 40",city:"Lafayette",rent:1292,walk:"Not walkable"},
+  {name:"Anvil 41",city:"Lafayette",rent:1777,walk:"Not walkable"},
+  {name:"Anvil 42",city:"Lafayette",rent:2322,walk:"Not walkable"},
+  {name:"313 Columbia Apartments",city:"Lafayette",rent:1900,walk:"Not walkable"},
+  {name:"1436 Union Street",city:"Lafayette",rent:1150,walk:"Not walkable"},
+  {name:"715 North 4th Street",city:"Lafayette",rent:850,walk:"Not walkable"},
+  {name:"John Purdue Block",city:"Lafayette",rent:786,walk:"Not walkable"},
+  {name:"John Purdue Block",city:"Lafayette",rent:2126,walk:"Not walkable"},
+  {name:"John Purdue Block",city:"Lafayette",rent:2591,walk:"Not walkable"},
+  {name:"John Purdue Block",city:"Lafayette",rent:3600,walk:"Not walkable"},
+  {name:"200 Perrin Avenue",city:"Lafayette",rent:1650,walk:"Not walkable"},
+  {name:"115 South 6th Street",city:"Lafayette",rent:1350,walk:"Not walkable"},
+  {name:"320 Chapel Dr",city:"Lafayette",rent:1165,walk:"Not walkable"},
+  {name:"321 Chapel Dr",city:"Lafayette",rent:1298,walk:"Not walkable"},
+  {name:"Element 26 Apartments",city:"Lafayette",rent:1090,walk:"Not walkable"},
+  {name:"Element 26 Apartments",city:"Lafayette",rent:1207,walk:"Not walkable"},
+  {name:"Element 26 Apartments",city:"Lafayette",rent:1284,walk:"Not walkable"},
+  {name:"Element 26 Apartments",city:"Lafayette",rent:1521,walk:"Not walkable"},
+  {name:"Element 26 Apartments",city:"Lafayette",rent:1958,walk:"Not walkable"},
+  {name:"232 Pierce Street",city:"West Lafayette",rent:600,walk:"Walkable"},
+  {name:"Crestview Apartments",city:"West Lafayette",rent:971.5,walk:"Walkable"},
+  {name:"Crestview Apartments",city:"West Lafayette",rent:1074,walk:"Walkable"},
+  {name:"Crestview Apartments",city:"West Lafayette",rent:801,walk:"Walkable"},
+  {name:"Crestview Apartments",city:"West Lafayette",rent:763,walk:"Walkable"},
+  {name:"Crestview Apartments",city:"West Lafayette",rent:740,walk:"Walkable"},
+  {name:"400 South Grant",city:"West Lafayette",rent:750,walk:"Walkable"},
+  {name:"400 South Grant",city:"West Lafayette",rent:1528,walk:"Walkable"},
+  {name:"350 South Chauncey",city:"West Lafayette",rent:950,walk:"Walkable"},
+  {name:"500 North River Road",city:"West Lafayette",rent:795,walk:"Walkable"},
+  {name:"271 South River Road",city:"West Lafayette",rent:675,walk:"Walkable"},
+  {name:"518 North River Road",city:"West Lafayette",rent:928,walk:"Walkable"},
+  {name:"500 North River Road (budget)",city:"West Lafayette",rent:400,walk:"Walkable"},
+  {name:"271 South River Road (budget)",city:"West Lafayette",rent:788,walk:"Walkable"},
+  {name:"1559 West 350 North",city:"West Lafayette",rent:700,walk:"Not walkable"},
+  {name:"Ka",city:"West Lafayette",rent:600,walk:"Not walkable"},
+];
+
+// ─── SECTION 1: COMPARATIVE CHART ────────────────────────────────────────────
+
+const WL_AVG = TRACKER_DATA.find(d => d.location === "West Lafayette").avg;
+const US_AVG = TRACKER_DATA.find(d => d.location === "United States").avg;
+const maxRent = Math.max(...TRACKER_DATA.map(d => d.avg));
+
+function buildCompareSection() {
+  const container = document.getElementById('compare-bars');
+  TRACKER_DATA.forEach(d => {
+    const pct = (d.avg / maxRent * 100).toFixed(1);
+    const isWL = d.location === "West Lafayette";
+    const isUS = d.location === "United States";
+    const fillClass = isWL ? 'highlight' : (isUS ? 'us' : 'normal');
+    const delta = d.avg - WL_AVG;
+    const deltaStr = delta === 0 ? 'local' : (delta > 0 ? `+$${delta.toLocaleString()} vs WL` : `-$${Math.abs(delta).toLocaleString()} vs WL`);
+    const deltaClass = delta === 0 ? 'delta-neutral' : (delta > 0 ? 'delta-up' : 'delta-down');
+
+    container.innerHTML += `
+      <div class="compare-row">
+        <div class="compare-label">${d.location}</div>
+        <div class="compare-track">
+          <div class="compare-fill ${fillClass}" style="width:${pct}%">
+            <span class="compare-val">$${d.avg.toLocaleString()}</span>
+          </div>
+        </div>
+        <div class="compare-delta ${deltaClass}">${deltaStr}</div>
+      </div>`;
+  });
+}
+
+function buildCompareChart() {
+  const ctx = document.getElementById('compareChart').getContext('2d');
+  const labels = TRACKER_DATA.map(d => d.location);
+  const values = TRACKER_DATA.map(d => d.avg);
+  const bgColors = TRACKER_DATA.map(d =>
+    d.location === 'West Lafayette' ? '#CFB991' :
+    d.location === 'United States' ? '#5fa87a' : '#5a4a28'
+  );
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Avg Monthly Rent ($)',
+        data: values,
+        backgroundColor: bgColors,
+        borderWidth: 0,
+        borderRadius: 4,
+        hoverBackgroundColor: bgColors.map(c => c),
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          titleColor: '#CFB991',
+          bodyColor: '#e8e2d9',
+          borderColor: '#2e2e2e',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => ` $${ctx.raw.toLocaleString()} / month`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#2e2e2e' },
+          ticks: { color: '#bbb', font: { family: 'DM Sans', size: 11 } }
+        },
+        y: {
+          grid: { color: '#2e2e2e' },
+          ticks: {
+            color: '#7a7060',
+            font: { family: 'DM Sans', size: 10 },
+            callback: v => `$${v.toLocaleString()}`
+          },
+          min: 0,
+          suggestedMax: 2200
+        }
+      }
+    }
+  });
+}
+
+// ─── SECTION 2: APT AVERAGES ──────────────────────────────────────────────────
+
+function getAptAverages(cityFilter, walkFilter) {
+  const map = {};
+  LISTINGS_RAW.forEach(d => {
+    if (cityFilter && d.city !== cityFilter) return;
+    if (walkFilter && d.walk !== walkFilter) return;
+    if (!map[d.name]) map[d.name] = { total: 0, count: 0, city: d.city, walk: d.walk };
+    map[d.name].total += d.rent;
+    map[d.name].count++;
+  });
+  return Object.entries(map).map(([name, v]) => ({
+    name,
+    avg: Math.round(v.total / v.count),
+    count: v.count,
+    city: v.city,
+    walk: v.walk
+  }));
+}
+
+function renderAptBars() {
+  const cityFilter = document.getElementById('city-filter').value;
+  const walkFilter = document.getElementById('walk-filter').value;
+  const sortVal = document.getElementById('sort-filter').value;
+
+  let data = getAptAverages(cityFilter, walkFilter);
+
+  if (sortVal === 'asc') data.sort((a, b) => a.avg - b.avg);
+  else if (sortVal === 'desc') data.sort((a, b) => b.avg - a.avg);
+  else data.sort((a, b) => a.name.localeCompare(b.name));
+
+  const maxAvg = Math.max(...data.map(d => d.avg));
+  const container = document.getElementById('apt-bars');
+  const badge = document.getElementById('apt-shown-badge');
+  badge.textContent = `${data.length} complexes`;
+
+  container.innerHTML = data.map(d => {
+    const pct = (d.avg / maxAvg * 100).toFixed(1);
+    const isWalk = d.walk === 'Walkable';
+    return `<div class="apt-row">
+      <div class="apt-name" title="${d.name}">${d.name}</div>
+      <div class="apt-track">
+        <div class="apt-fill ${isWalk ? 'walkable' : ''}" style="width:${pct}%">
+          <span class="apt-fill-val">$${d.avg.toLocaleString()}</span>
+        </div>
+      </div>
+      <div class="apt-count">${d.count} listing${d.count > 1 ? 's' : ''}</div>
+      <div class="apt-city-badge">${d.city}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── HEADER STATS ─────────────────────────────────────────────────────────────
+
+function buildHeaderStats() {
+  const valid = LISTINGS_RAW.filter(d => d.city === 'West Lafayette');
+  const wlAvg = Math.round(valid.reduce((s, d) => s + d.rent, 0) / valid.length);
+  const complexes = new Set(LISTINGS_RAW.map(d => d.name)).size;
+
+  document.getElementById('stat-listings').textContent = LISTINGS_RAW.length;
+  document.getElementById('stat-complexes').textContent = complexes;
+  document.getElementById('stat-avg').textContent = `$${wlAvg.toLocaleString()}`;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+buildHeaderStats();
+buildCompareSection();
+buildCompareChart();
+renderAptBars();
+
+document.getElementById('city-filter').addEventListener('change', renderAptBars);
+document.getElementById('walk-filter').addEventListener('change', renderAptBars);
+document.getElementById('sort-filter').addEventListener('change', renderAptBars);
+</script>
+</body>
+</html>
