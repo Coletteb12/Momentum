@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BoilerCOL — Transportation Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+ 
+  :root {
+    --gold: #CFB991;
+    --black: #1a1a1a;
+    --dark: #141414;
+    --card: #1f1f1f;
+    --border: #2e2e2e;
+    --text: #e8e2d9;
+    --muted: #7a7060;
+    --accent: #e8a020;
+    --green: #5fa87a;
+    --red: #d46060;
+    --purdue-bg: #0f0f0f;
+    --best: #5fa87a;
+    --worst: #d46060;
+  }
+ 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+  body {
+    background: var(--purdue-bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+ 
+  /* HEADER */
+  header {
+    background: #0f0f0f;
+    border-bottom: 1px solid var(--gold);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .logo-block { flex: 1; min-width: 260px; }
+  .logo-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .logo-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    color: #fff;
+    line-height: 1;
+  }
+  .logo-title span { color: var(--gold); }
+  .logo-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 400;
+  }
+ 
+  @media (max-width: 700px) {
+    header, .info-section { padding-left: 16px; padding-right: 16px; }
+  }
+ 
+  /* ── SHARED SECTION STYLES ────────────────────────────────── */
+  .info-section {
+    padding: 0 40px 48px;
+  }
+  .info-section-header {
+    font-family: 'DM Serif Display', serif;
+    font-size: 13px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 32px 0 16px;
+    border-bottom: 1px solid #222;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .info-section-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, #2e2e2e, transparent);
+  }
+  .info-section-intro {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    line-height: 1.6;
+    max-width: 700px;
+  }
+  .info-section-intro strong { color: var(--text); font-weight: 500; }
+ 
+  /* ── BUS PASS SECTION ─────────────────────────────────────── */
+  .apt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .apt-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .apt-card:hover { border-color: rgba(207,185,145,0.4); transform: translateY(-2px); }
+  .apt-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .apt-card:hover::before { opacity: 1; }
+  .apt-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .apt-distance {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .apt-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .apt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .apt-badge.bus {
+    background: rgba(95,168,122,0.15);
+    border: 1px solid rgba(95,168,122,0.4);
+    color: var(--green);
+  }
+  .apt-badge.included {
+    background: rgba(207,185,145,0.1);
+    border: 1px solid rgba(207,185,145,0.3);
+    color: var(--gold);
+  }
+  .apt-note {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+    border-top: 1px solid #252525;
+    padding-top: 10px;
+    margin-top: 2px;
+  }
+  .bus-savings-note {
+    background: rgba(95,168,122,0.06);
+    border: 1px solid rgba(95,168,122,0.2);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 12px;
+  }
+  .bus-savings-note strong { color: var(--green); }
+ 
+  /* ── GAS CALCULATOR SECTION ───────────────────────────────── */
+  .gas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 820px) { .gas-grid { grid-template-columns: 1fr; } }
+ 
+  .gas-price-table {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .gas-table-header {
+    background: #252525;
+    padding: 12px 18px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    display: grid;
+    grid-template-columns: 1fr repeat(4, 72px);
+    gap: 8px;
+  }
+  .gas-table-header span:not(:first-child) { text-align: right; }
+  .gas-table-row {
+    display: grid;
+    grid-template-columns: 1fr repeat(4, 72px);
+    gap: 8px;
+    padding: 10px 18px;
+    border-bottom: 1px solid #1e1e1e;
+    font-size: 12px;
+    align-items: center;
+    transition: background 0.15s;
+  }
+  .gas-table-row:last-child { border-bottom: none; }
+  .gas-table-row:hover { background: #252525; }
+  .gas-row-label { color: var(--muted); }
+  .gas-row-label.current { color: var(--text); font-weight: 500; }
+  .gas-val { text-align: right; font-family: 'DM Serif Display', serif; font-size: 14px; }
+  .gas-val.reg { color: #6ab0d4; }
+  .gas-val.mid { color: #a0c8e8; }
+  .gas-val.prem { color: var(--gold); }
+  .gas-val.diesel { color: #c08060; }
+ 
+  .gas-calculator {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .gas-calc-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .gas-calc-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .calc-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .calc-row label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .calc-row-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .calc-row input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .calc-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .calc-row input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+  .calc-val-display {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    color: var(--gold);
+    min-width: 56px;
+    text-align: right;
+  }
+  .calc-row select {
+    background: #2a2a2a;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  .calc-row select:hover, .calc-row select:focus { border-color: var(--gold); }
+  .calc-row select option { background: #1a1a1a; }
+ 
+  .calc-result {
+    background: #0f0f0f;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 4px;
+  }
+  .calc-result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    border-bottom: 1px solid #1e1e1e;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .calc-result-row:last-child { border-bottom: none; }
+  .calc-result-row .amt {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    color: var(--text);
+  }
+  .calc-result-row .amt.highlight { color: var(--gold); font-size: 22px; }
+  .calc-result-row .amt.warn { color: var(--red); }
+  .calc-note {
+    font-size: 10px;
+    color: #444;
+    margin-top: 10px;
+    line-height: 1.5;
+    font-style: italic;
+  }
+ 
+  @media (max-width: 700px) {
+    .gas-table-header, .gas-table-row { grid-template-columns: 1fr repeat(2,66px); }
+    .gas-table-header span:nth-child(3),
+    .gas-table-header span:nth-child(5),
+    .gas-table-row .gas-val:nth-child(3),
+    .gas-table-row .gas-val:nth-child(5) { display: none; }
+  }
+ 
+  /* ── PARKING PERMITS SECTION ──────────────────────────────── */
+  .permit-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 820px) { .permit-layout { grid-template-columns: 1fr; } }
+ 
+  .permit-chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .permit-chart-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .permit-chart-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .permit-chart-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .chart-wrap {
+    position: relative;
+    height: 300px;
+  }
+ 
+  /* Permit breakdown list */
+  .permit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .permit-row {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.2s;
+  }
+  .permit-row:hover { border-color: rgba(207,185,145,0.35); }
+  .permit-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .permit-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: #fff;
+  }
+  .permit-price {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+  .permit-track {
+    width: 100%;
+    background: #252525;
+    border-radius: 3px;
+    height: 5px;
+    overflow: hidden;
+  }
+  .permit-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #b89030, var(--gold));
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+  }
+  .permit-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+ 
+  /* CTA button */
+  .permit-cta-wrap {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-start;
+  }
+  .permit-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .permit-cta-btn:hover {
+    background: var(--gold);
+    color: #0f0f0f;
+  }
+  .permit-cta-btn svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+ 
+</style>
+</head>
+<body>
+ 
+<header>
+  <div class="logo-block">
+    <div class="logo-eyebrow">West Lafayette · Off-Campus Guide</div>
+    <div class="logo-title">Boiler<span>COL</span></div>
+    <div class="logo-sub">Transit and driving resources for Purdue students</div>
+  </div>
+</header>
+ 
+<!-- BUS PASS SECTION -->
+<section class="info-section">
+  <div class="info-section-header">🚌 Bus Pass — Included Apartments</div>
+  <p class="info-section-intro">
+    Several off-campus apartments near Purdue <strong>include a CityBus pass in your rent</strong>, giving you free unlimited access to West Lafayette transit. This effectively eliminates the need for a car for grocery runs, campus commutes, and errands — and it's already factored into your lease price.
+  </p>
+ 
+  <div class="apt-grid">
+    <div class="apt-card">
+      <div class="apt-name">Village West</div>
+      <div class="apt-distance">~3.1 mi from campus · Salisbury St</div>
+      <div class="apt-badge-row">
+        <span class="apt-badge bus">🚌 Bus Pass Included</span>
+        <span class="apt-badge included">In Rent</span>
+      </div>
+      <div class="apt-note">Unlimited CityBus access bundled with lease. Routes 1, 4, and 6 service this corridor with stops near Walmart and Meijer on Sagamore Pkwy.</div>
+    </div>
+    <div class="apt-card">
+      <div class="apt-name">Lark</div>
+      <div class="apt-distance">~4.3 mi from campus · Northwestern Ave</div>
+      <div class="apt-badge-row">
+        <span class="apt-badge bus">🚌 Bus Pass Included</span>
+        <span class="apt-badge included">In Rent</span>
+      </div>
+      <div class="apt-note">CityBus pass included for all residents. Close proximity to campus means most errands can be done on foot or by bus — no parking permit needed.</div>
+    </div>
+    <div class="apt-card">
+      <div class="apt-name">Alight West Lafayette</div>
+      <div class="apt-distance">~4.3 mi from campus · Littleton St</div>
+      <div class="apt-badge-row">
+        <span class="apt-badge bus">🚌 Bus Pass Included</span>
+        <span class="apt-badge included">In Rent</span>
+      </div>
+      <div class="apt-note">Full CityBus pass included with every unit. The Route 4 stop is directly outside, giving direct access to campus and the Sagamore Pkwy grocery corridor.</div>
+    </div>
+    <div class="apt-card">
+      <div class="apt-name">Redpoint</div>
+      <div class="apt-distance">~4.8 mi from campus · Yeager Rd</div>
+      <div class="apt-badge-row">
+        <span class="apt-badge bus">🚌 Bus Pass Included</span>
+        <span class="apt-badge included">In Rent</span>
+      </div>
+      <div class="apt-note">CityBus pass bundled into lease terms for all residents. Routes serving Walmart on Creasy Lane and Target on Sagamore Pkwy are accessible without transfers.</div>
+    </div>
+  </div>
+ 
+  <div class="bus-savings-note">
+    💡 <strong>What does this save you?</strong> &nbsp;A Purdue student CityBus pass costs ~$75–$100/semester if purchased separately (~$150–$200/year). Apartments with included passes effectively reduce your living costs by that amount — and if it means you don't need a car on campus, your savings on gas, parking permits (~$450–$600/yr at Purdue), and car maintenance are significantly higher.
+  </div>
+</section>
+ 
+<!-- GAS SECTION -->
+<section class="info-section">
+  <div class="info-section-header">⛽ Monthly Gas Cost Estimator — Off-Campus Driver</div>
+  <p class="info-section-intro">
+    Living off campus means driving to class, the store, and around town. Based on <strong>current Indiana/West Lafayette gas prices</strong> (Apr 22, 2026), here's what you're likely spending at the pump — and an interactive calculator to estimate your personal monthly cost.
+  </p>
+ 
+  <div class="gas-grid">
+    <div class="gas-price-table">
+      <div class="gas-table-header">
+        <span></span>
+        <span>Regular</span>
+        <span>Mid</span>
+        <span>Premium</span>
+        <span>Diesel</span>
+      </div>
+      <div class="gas-table-row">
+        <span class="gas-row-label current">Current Avg.</span>
+        <span class="gas-val reg">$3.902</span>
+        <span class="gas-val mid">$4.480</span>
+        <span class="gas-val prem">$4.955</span>
+        <span class="gas-val diesel">$5.486</span>
+      </div>
+      <div class="gas-table-row">
+        <span class="gas-row-label">Yesterday</span>
+        <span class="gas-val reg">$3.907</span>
+        <span class="gas-val mid">$4.471</span>
+        <span class="gas-val prem">$4.962</span>
+        <span class="gas-val diesel">$5.495</span>
+      </div>
+      <div class="gas-table-row">
+        <span class="gas-row-label">Week Ago</span>
+        <span class="gas-val reg">$3.982</span>
+        <span class="gas-val mid">$4.540</span>
+        <span class="gas-val prem">$5.038</span>
+        <span class="gas-val diesel">$5.575</span>
+      </div>
+      <div class="gas-table-row">
+        <span class="gas-row-label">Month Ago</span>
+        <span class="gas-val reg">$3.884</span>
+        <span class="gas-val mid">$4.411</span>
+        <span class="gas-val prem">$4.903</span>
+        <span class="gas-val diesel">$5.007</span>
+      </div>
+      <div class="gas-table-row">
+        <span class="gas-row-label">Year Ago</span>
+        <span class="gas-val reg">$3.151</span>
+        <span class="gas-val mid">$3.657</span>
+        <span class="gas-val prem">$4.150</span>
+        <span class="gas-val diesel">$3.560</span>
+      </div>
+    </div>
+ 
+    <div class="gas-calculator">
+      <div class="gas-calc-title">Your Monthly Estimate</div>
+      <div class="gas-calc-sub">Adjust inputs to match your situation</div>
+      <div class="calc-row">
+        <label>Miles driven per week</label>
+        <div class="calc-row-inline">
+          <input type="range" id="miles-slider" min="20" max="400" value="100" step="5">
+          <span class="calc-val-display" id="miles-val">100 mi</span>
+        </div>
+      </div>
+      <div class="calc-row">
+        <label>Fuel economy (MPG)</label>
+        <div class="calc-row-inline">
+          <input type="range" id="mpg-slider" min="10" max="50" value="28" step="1">
+          <span class="calc-val-display" id="mpg-val">28 mpg</span>
+        </div>
+      </div>
+      <div class="calc-row">
+        <label>Fuel type</label>
+        <select id="fuel-type">
+          <option value="3.902">Regular Unleaded — $3.902/gal</option>
+          <option value="4.480">Midgrade — $4.480/gal</option>
+          <option value="4.955">Premium — $4.955/gal</option>
+          <option value="5.486">Diesel — $5.486/gal</option>
+        </select>
+      </div>
+      <div class="calc-result" id="calc-result"></div>
+      <div class="calc-note">
+        Estimates assume 4.33 weeks/month. Prices reflect current West Lafayette averages as of Apr 22, 2026 (AAA data). Actual costs vary by driving habits, traffic, and seasonal price swings. Year-ago regular was $3.151 — that's a <strong style="color:var(--red)">+23.8% YoY increase</strong>.
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- PARKING PERMITS SECTION -->
+<section class="info-section">
+  <div class="info-section-header">🅿️ Student Parking Permits — Annual Cost by Type</div>
+  <p class="info-section-intro">
+    Purdue offers several permit types depending on your residency, student status, and employment. Costs range from <strong>$75 to $250/year</strong>. Understanding your eligibility can save hundreds — or help you decide whether a car on campus is worth it at all.
+  </p>
+ 
+  <div class="permit-layout">
+ 
+    <!-- Chart -->
+    <div class="permit-chart-card">
+      <div class="permit-chart-title">Annual Permit Cost Comparison</div>
+      <div class="permit-chart-sub">All student-eligible permit types</div>
+      <div class="chart-wrap">
+        <canvas id="permitChart"></canvas>
+      </div>
+    </div>
+ 
+    <!-- Permit list -->
+    <div class="permit-list">
+ 
+      <div class="permit-row">
+        <div class="permit-row-top">
+          <div class="permit-name">Value Permit</div>
+          <div class="permit-price">$75 / yr</div>
+        </div>
+        <div class="permit-track"><div class="permit-fill" style="width:30%"></div></div>
+        <div class="permit-desc">Off-boundary students or first-year exception. Parks at Airport east lot or 2550 Northwestern Ave. Free campus transit included.</div>
+      </div>
+ 
+      <div class="permit-row">
+        <div class="permit-row-top">
+          <div class="permit-name">"C" Permit (Commuter)</div>
+          <div class="permit-price">$100 / yr</div>
+        </div>
+        <div class="permit-track"><div class="permit-fill" style="width:40%"></div></div>
+        <div class="permit-desc">Any student living outside the eligibility boundary. Often sells out — purchase as early as possible. Undergrads get access after grad students.</div>
+      </div>
+ 
+      <div class="permit-row">
+        <div class="permit-row-top">
+          <div class="permit-name">Student Employee B</div>
+          <div class="permit-price">$100 / yr</div>
+        </div>
+        <div class="permit-track"><div class="permit-fill" style="width:40%"></div></div>
+        <div class="permit-desc">Students employed by Purdue 30+ hrs/week. Requires completed application. No overnight parking or gated garage access.</div>
+      </div>
+ 
+      <div class="permit-row">
+        <div class="permit-row-top">
+          <div class="permit-name">Residence Hall</div>
+          <div class="permit-price">$150 / yr</div>
+        </div>
+        <div class="permit-track"><div class="permit-fill" style="width:60%"></div></div>
+        <div class="permit-desc">2nd year+ students in Purdue residence halls or Hawkins Hall. First-year students are not eligible regardless of credits earned.</div>
+      </div>
+ 
+      <div class="permit-row">
+        <div class="permit-row-top">
+          <div class="permit-name">FSCL Tower Acres</div>
+          <div class="permit-price">$150 / yr</div>
+        </div>
+        <div class="permit-track"><div class="permit-fill" style="width:60%"></div></div>
+        <div class="permit-desc">Students living on-site in Tower Acres fraternity/sorority/cooperative housing for the academic year. Limited quantity available.</div>
+      </div>
+ 
+      <div class="permit-row">
+        <div class="permit-row-top">
+          <div class="permit-name">Student Employee A</div>
+          <div class="permit-price">$250 / yr</div>
+        </div>
+        <div class="permit-track"><div class="permit-fill" style="width:100%"></div></div>
+        <div class="permit-desc">Students employed by Purdue 30+ hrs/week seeking A-level access. Also available at $125/semester. Grad students eligible for payroll deduction.</div>
+      </div>
+ 
+      <div class="permit-row">
+        <div class="permit-row-top">
+          <div class="permit-name">Student Garage</div>
+          <div class="permit-price">$250 / yr</div>
+        </div>
+        <div class="permit-track"><div class="permit-fill" style="width:100%"></div></div>
+        <div class="permit-desc">Select grad/professional students only. Assigned to one garage (Wood St, Northwestern Ave, University St, or Harrison St). High demand — not guaranteed.</div>
+      </div>
+ 
+    </div>
+  </div>
+ 
+  <!-- CTA Button -->
+  <div class="permit-cta-wrap">
+    <a class="permit-cta-btn" href="https://www.purdue.edu/operations/parking/home/permits/students/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      View Full Permit Details — Purdue Parking Operations
+    </a>
+  </div>
+ 
+</section>
+ 
+<script>
+// ── GAS CALCULATOR ─────────────────────────────────────────────
+function calcGas() {
+  const miles  = +document.getElementById('miles-slider').value;
+  const mpg    = +document.getElementById('mpg-slider').value;
+  const price  = +document.getElementById('fuel-type').value;
+ 
+  document.getElementById('miles-val').textContent = miles + ' mi';
+  document.getElementById('mpg-val').textContent   = mpg + ' mpg';
+ 
+  const weeksPerMonth = 4.33;
+  const galsPerMonth  = (miles * weeksPerMonth) / mpg;
+  const costPerMonth  = galsPerMonth * price;
+  const costPerYear   = costPerMonth * 12;
+  const costPerSem    = costPerMonth * 4.5;
+  const warn = costPerMonth > 150 ? 'warn' : '';
+ 
+  document.getElementById('calc-result').innerHTML = `
+    <div class="calc-result-row">
+      <span>Gallons / month</span>
+      <span class="amt">${galsPerMonth.toFixed(1)} gal</span>
+    </div>
+    <div class="calc-result-row">
+      <span>Monthly gas cost</span>
+      <span class="amt highlight ${warn}">$${costPerMonth.toFixed(2)}</span>
+    </div>
+    <div class="calc-result-row">
+      <span>Per semester (~4.5 mo)</span>
+      <span class="amt">$${costPerSem.toFixed(2)}</span>
+    </div>
+    <div class="calc-result-row">
+      <span>Annual estimate</span>
+      <span class="amt">$${costPerYear.toFixed(2)}</span>
+    </div>
+  `;
+}
+ 
+document.getElementById('miles-slider').addEventListener('input', calcGas);
+document.getElementById('mpg-slider').addEventListener('input', calcGas);
+document.getElementById('fuel-type').addEventListener('change', calcGas);
+calcGas();
+ 
+// ── PARKING PERMIT CHART ───────────────────────────────────────
+const permitCtx = document.getElementById('permitChart').getContext('2d');
+ 
+const permitLabels = [
+  'Value',
+  '"C" Permit',
+  'Student Emp. B',
+  'Residence Hall',
+  'FSCL Tower Acres',
+  'Student Emp. A',
+  'Student Garage'
+];
+const permitCosts = [75, 100, 100, 150, 150, 250, 250];
+const permitColors = permitCosts.map(v => {
+  if (v <= 75)  return '#5fa87a';
+  if (v <= 100) return '#6ab0d4';
+  if (v <= 150) return '#CFB991';
+  return '#d46060';
+});
+ 
+new Chart(permitCtx, {
+  type: 'bar',
+  data: {
+    labels: permitLabels,
+    datasets: [{
+      label: 'Annual Cost ($)',
+      data: permitCosts,
+      backgroundColor: permitColors,
+      borderWidth: 0,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1a1a1a',
+        titleColor: '#CFB991',
+        bodyColor: '#e8e2d9',
+        borderColor: '#2e2e2e',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ` $${ctx.raw} / year`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: '#2e2e2e' },
+        ticks: {
+          color: '#bbb',
+          font: { family: 'DM Sans', size: 10 },
+          maxRotation: 30,
+          minRotation: 20
+        }
+      },
+      y: {
+        grid: { color: '#2e2e2e' },
+        ticks: {
+          color: '#7a7060',
+          font: { family: 'DM Sans', size: 10 },
+          callback: v => `$${v}`
+        },
+        min: 0,
+        suggestedMax: 300
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
