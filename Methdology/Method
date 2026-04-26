@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BoilerCOL — Methodology</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+ 
+  :root {
+    --gold: #CFB991;
+    --card: #1f1f1f;
+    --border: #2e2e2e;
+    --text: #e8e2d9;
+    --muted: #7a7060;
+    --green: #5fa87a;
+    --red: #d46060;
+    --blue: #6ab0d4;
+    --purdue-bg: #0f0f0f;
+  }
+ 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+  body {
+    background: var(--purdue-bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+ 
+  header {
+    background: #0f0f0f;
+    border-bottom: 1px solid var(--gold);
+    padding: 28px 40px 24px;
+  }
+  .logo-eyebrow {
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .logo-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    color: #fff;
+    line-height: 1;
+  }
+  .logo-title span { color: var(--gold); }
+  .logo-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 400;
+  }
+ 
+  .page-intro {
+    padding: 40px 40px 32px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .page-intro-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .page-intro-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 3vw, 40px);
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .page-intro-sub {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 580px;
+    line-height: 1.7;
+  }
+ 
+  .sections-wrapper {
+    padding: 40px 40px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 860px;
+  }
+ 
+  .method-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .method-card:hover { border-color: rgba(207,185,145,0.35); }
+  .method-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .method-card.c1::before { background: linear-gradient(90deg, var(--blue), transparent); }
+  .method-card.c2::before { background: linear-gradient(90deg, var(--gold), transparent); }
+  .method-card.c3::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .method-card.c4::before { background: linear-gradient(90deg, #a080d0, transparent); }
+  .method-card.c5::before { background: linear-gradient(90deg, var(--red), transparent); }
+ 
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .card-icon { font-size: 18px; }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 19px;
+    color: #fff;
+  }
+ 
+  .bullet-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bullet-list li {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    padding-left: 16px;
+    position: relative;
+  }
+  .bullet-list li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--border);
+  }
+  .bullet-list li strong { color: var(--text); font-weight: 500; }
+ 
+  .sub-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin: 12px 0 6px;
+    font-weight: 500;
+  }
+ 
+  @media (max-width: 700px) {
+    .page-intro, .sections-wrapper { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+ 
+<header>
+  <div class="logo-eyebrow">West Lafayette · Off-Campus Guide</div>
+  <div class="logo-title">Boiler<span>COL</span></div>
+  <div class="logo-sub">Transit and driving resources for Purdue students</div>
+</header>
+ 
+<div class="page-intro">
+  <div class="page-intro-label">Behind the Data</div>
+  <div class="page-intro-title">Methodology</div>
+  <div class="page-intro-sub">Data collection, cleaning, and organization for the BoilerCOL cost-of-living guide.</div>
+</div>
+ 
+<div class="sections-wrapper">
+ 
+  <!-- 1. Data Collection -->
+  <div class="method-card c1">
+    <div class="card-header">
+      <span class="card-icon">📋</span>
+      <div class="card-title">Data Collection</div>
+    </div>
+    <div class="sub-label">Primary Data</div>
+    <ul class="bullet-list">
+      <li>Student survey — <strong>housing, groceries, transportation, misc. costs</strong></li>
+    </ul>
+    <div class="sub-label">Market Data</div>
+    <ul class="bullet-list">
+      <li>Housing listings — <strong>Zillow, Apartments.com, Redfin, Purdue housing</strong></li>
+      <li>Grocery prices — <strong>standardized basket across local stores</strong></li>
+      <li>Transportation — <strong>parking, gas, bus systems</strong></li>
+    </ul>
+    <div class="sub-label">Supplementary</div>
+    <ul class="bullet-list">
+      <li>Insurance estimates <strong>(limited sample)</strong></li>
+    </ul>
+  </div>
+ 
+  <!-- 2. Collection Approach -->
+  <div class="method-card c2">
+    <div class="card-header">
+      <span class="card-icon">📅</span>
+      <div class="card-title">Collection Approach</div>
+    </div>
+    <ul class="bullet-list">
+      <li>2-week fixed data collection window</li>
+      <li>Decentralized team input → broad coverage of cost factors</li>
+      <li>Focus on student-relevant, real-world expenses</li>
+    </ul>
+  </div>
+ 
+  <!-- 3. Data Cleaning & Standardization -->
+  <div class="method-card c3">
+    <div class="card-header">
+      <span class="card-icon">🧹</span>
+      <div class="card-title">Data Cleaning &amp; Standardization</div>
+    </div>
+    <ul class="bullet-list">
+      <li>Converted all costs to monthly estimates</li>
+      <li>Removed duplicates and reviewed outliers</li>
+      <li>Organized into categories: <strong>Housing | Groceries | Transportation</strong></li>
+    </ul>
+  </div>
+ 
+  <!-- 4. Data Organization -->
+  <div class="method-card c4">
+    <div class="card-header">
+      <span class="card-icon">🗃️</span>
+      <div class="card-title">Data Organization</div>
+    </div>
+    <ul class="bullet-list">
+      <li>Centralized in GitHub repository</li>
+    </ul>
+  </div>
+ 
+  <!-- 5. Transparency & Limitations -->
+  <div class="method-card c5">
+    <div class="card-header">
+      <span class="card-icon">⚠️</span>
+      <div class="card-title">Transparency &amp; Limitations</div>
+    </div>
+    <ul class="bullet-list">
+      <li>Fully documented sources and methods</li>
+      <li>Reproducible data pipeline</li>
+    </ul>
+    <div class="sub-label">Limitations</div>
+    <ul class="bullet-list">
+      <li>Short time window</li>
+      <li>Self-reported survey bias</li>
+      <li>Manual data inconsistencies</li>
+    </ul>
+  </div>
+ 
+</div>
+ 
+</body>
+</html>
